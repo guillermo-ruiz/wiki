@@ -98,6 +98,11 @@
             v-btn.animated.fadeIn.wait-p11s(icon, tile, v-on='on', @click='insertAfter({ content: `---`, newLine: true })').mx-0
               v-icon mdi-minus
           span {{$t('editor:markup.horizontalBar')}}
+        v-tooltip(bottom, color='primary')
+          template(v-slot:activator='{ on }')
+            v-btn.animated.fadeIn.wait-p11s(icon, tile, v-on='on', @click='toggleEditorSpellCheck()').mx-0
+              v-icon(:color='editorSpellModeActive ? `amber` : `white`') mdi-spellcheck
+          span {{$t('editor:markup.toggleEditorSpellcheck')}}
         template(v-if='$vuetify.breakpoint.mdAndUp')
           v-spacer
           v-tooltip(bottom, color='primary', v-if='previewShown')
@@ -407,6 +412,7 @@ export default {
       previewShown: true,
       previewHTML: '',
       helpShown: false,
+      editorSpellModeActive: false,
       spellModeActive: false,
       insertLinkDialog: false
     }
@@ -433,6 +439,7 @@ export default {
         })
       }
     },
+    editorSpellModeActive (newValue, oldValue) {},
     spellModeActive (newValue, oldValue) {
       if (newValue) {
         this.$nextTick(() => {
@@ -546,6 +553,14 @@ export default {
       const curLine = this.cm.doc.getCursor('to').line
       const lineLength = this.cm.doc.getLine(curLine).length
       this.cm.doc.replaceRange(newLine ? `\n${content}\n` : content, { line: curLine, ch: lineLength + 1 })
+    },
+    /**
+     * Insert content after current line
+     */
+    toggleEditorSpellCheck() {
+      this.cm.setOption('spellcheck', !this.editorSpellModeActive);
+      this.editorSpellModeActive = !this.editorSpellModeActive;
+      this.cm.refresh();
     },
     /**
      * Insert content before current line
@@ -775,7 +790,8 @@ export default {
       allowDropFileTypes: ['image/jpg', 'image/png', 'image/svg', 'image/jpeg', 'image/gif'],
       direction: siteConfig.rtl ? 'rtl' : 'ltr',
       foldGutter: true,
-      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+      spellcheck: false
     })
     this.cm.setValue(this.$store.get('editor/content'))
     this.cm.on('change', c => {
@@ -787,6 +803,7 @@ export default {
     } else {
       this.cm.setSize(null, 'calc(100vh - 112px - 16px)')
     }
+
 
     // Set Keybindings
 
